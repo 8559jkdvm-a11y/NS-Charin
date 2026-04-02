@@ -21,15 +21,16 @@ export default function Support() {
     const phone = formData.get('phone') as string;
     const message = formData.get('content') as string;
 
-    // EmailJS Configuration - Replace these with your actual IDs from emailjs.com
-    const SERVICE_ID = "service_id"; // e.g., "service_gmail"
-    const TEMPLATE_ID = "template_id"; // e.g., "template_abc"
-    const PUBLIC_KEY = "public_key"; // e.g., "user_123..."
+    // EmailJS Configuration - Get these from your EmailJS dashboard (emailjs.com)
+    const meta = import.meta as any;
+    const SERVICE_ID = meta.env.VITE_EMAILJS_SERVICE_ID || "service_id";
+    const TEMPLATE_ID = meta.env.VITE_EMAILJS_TEMPLATE_ID || "template_id";
+    const PUBLIC_KEY = meta.env.VITE_EMAILJS_PUBLIC_KEY || "public_key";
 
     try {
       // If IDs are not set, fallback to mailto immediately
-      if (SERVICE_ID === "service_id") {
-        throw new Error("EmailJS IDs not configured");
+      if (SERVICE_ID === "service_id" || !meta.env.VITE_EMAILJS_SERVICE_ID) {
+        throw new Error("EmailJS not configured. Please set VITE_EMAILJS_SERVICE_ID, VITE_EMAILJS_TEMPLATE_ID, and VITE_EMAILJS_PUBLIC_KEY in settings.");
       }
 
       await emailjs.send(

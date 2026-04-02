@@ -15,8 +15,13 @@ interface AppContent {
       items: { title: string; desc: string }[];
     };
     features: {
-      feature1: { badge: string; title: string; desc: string; image: string };
-      feature2: { badge: string; title: string; desc: string; image: string };
+      feature1: { badge: string; title: string; desc: string; image: string; list: string[] };
+      feature2: { badge: string; title: string; desc: string; image: string; quote: string };
+    };
+    socialProof: {
+      title: string;
+      rating: string;
+      reviews: { name: string; content: string; tag: string }[];
     };
     promotion: {
       title: string;
@@ -37,45 +42,56 @@ const defaultContent: AppContent = {
   },
   main: {
     hero: {
-      badge: "논산계룡축협 프리미엄 양념육 '차린'",
-      title: "바쁜 퇴근길,\n10분 만에 완성하는\n우리 가족 안심 밥상",
-      description: "축협이 직접 관리한 100% 국내산 고기와 과일로 낸 건강한 단맛.\n오늘 저녁, 사랑하는 가족에게 정성을 선물하세요.",
-      cta: "첫 구매 한정 50% 특가로 시작하기",
-      secondaryCta: "브랜드 스토리 보기",
-      bgImage: "https://loremflickr.com/1600/900/meat,cooking",
+      badge: "논산계룡축협 직영 브랜드",
+      title: "우리 아이를 위한\n건강한 고기 요리, 차린",
+      description: "축협이 직접 관리하는 100% 한돈·한우로 만든\n프리미엄 양념육을 집에서 간편하게 만나보세요.",
+      cta: "특가 구매하기",
+      secondaryCta: "브랜드 스토리",
+      bgImage: "https://picsum.photos/seed/meat/1920/1080",
     },
     painPoints: {
-      title: "혹시 이런 고민 하고 계신가요?",
+      title: "바쁜 일상 속, 아이 식단 고민되시죠?",
       items: [
-        { title: "시간 부족", desc: "퇴근 후 아이 밥 챙기기엔 시간이 너무 없어요." },
-        { title: "건강 걱정", desc: "시판 간편식은 첨가물이 많을까 봐 걱정돼요." },
-        { title: "맛의 한계", desc: "매번 똑같은 메뉴, 아이가 잘 안 먹어서 속상해요." }
+        { title: "조리 시간 단축", desc: "양념까지 완벽하게! 10분이면 훌륭한 고기 요리가 완성됩니다." },
+        { title: "믿을 수 있는 원육", desc: "논산계룡축협이 엄선한 1등급 한돈과 한우만을 사용합니다." },
+        { title: "건강한 레시피", desc: "인공 감미료를 줄이고 천연 과일즙으로 맛을 내어 자극적이지 않습니다." }
       ]
     },
     features: {
       feature1: {
-        badge: "약속 01",
-        title: "100% 국내산,\n논산계룡축협의 자부심",
-        desc: "논산계룡축협이 직접 관리하는 농가에서 자란 건강한 우리 고기만을 사용합니다. 중간 유통 과정 없이 신선함을 그대로 담았습니다.",
-        image: "https://loremflickr.com/1600/900/farm,cow"
+        badge: "TRUSTED QUALITY",
+        title: "축협이 보증하는\n압도적인 신선함",
+        desc: "도축부터 가공, 양념까지 원스톱 시스템으로\n가장 신선한 상태의 고기를 전달합니다.",
+        image: "https://picsum.photos/seed/fresh/800/600",
+        list: ["HACCP 인증 시설 제조", "축산물 이력제 100% 적용"]
       },
       feature2: {
-        badge: "약속 02",
-        title: "인공 첨가물 없이\n과일로 낸 건강한 맛",
-        desc: "아이에게 먹일 음식이기에 설탕 대신 사과, 배 등 과일로 단맛을 냈습니다. 합성 보존료와 인공 색소를 줄여 뒷맛이 깔끔하고 담백합니다.",
-        image: "https://loremflickr.com/1600/900/family,dinner"
+        badge: "PREMIUM TASTE",
+        title: "아이들이 먼저 찾는\n부드러운 감칠맛",
+        desc: "수만 번의 테스트를 거친 황금 비율 양념으로\n고기 본연의 맛과 부드러운 식감을 살렸습니다.",
+        image: "https://picsum.photos/seed/taste/800/600",
+        quote: "까다로운 엄마들이 먼저 알아본 건강한 레시피"
       }
     },
+    socialProof: {
+      title: "이미 많은 부모님들이 경험하셨습니다",
+      rating: "평균 만족도 4.9 / 5.0",
+      reviews: [
+        { name: "김*희 님", content: "맞벌이라 저녁 준비가 늘 전쟁이었는데, 차린 덕분에 10분 만에 훌륭한 식탁이 완성돼요. 아이가 너무 잘 먹어서 뿌듯합니다.", tag: "워킹맘" },
+        { name: "이*준 님", content: "고기 질이 확실히 달라요. 축협 제품이라 믿고 샀는데 양념도 자극적이지 않고 고기가 정말 부드럽네요. 재구매 의사 200%입니다.", tag: "요리하는 아빠" },
+        { name: "박*연 님", content: "캠핑 갈 때 가져갔는데 인기 폭발이었어요! 포장도 깔끔하고 조리가 간편해서 야외에서도 셰프 소리 들었네요.", tag: "캠핑 매니아" }
+      ]
+    },
     promotion: {
-      title: "지금 바로 '차린'의\n신선함을 경험해보세요",
-      badge: "첫 구매 고객 한정",
-      priceOriginal: "29,800원",
-      priceDiscount: "14,900원",
-      cta: "50% 할인 혜택 받고 구매하기"
+      title: "지금 바로\n차린의 맛을 경험하세요",
+      badge: "첫 구매 한정 혜택",
+      priceOriginal: "25,000원",
+      priceDiscount: "9,900원",
+      cta: "9,900원에 시작하기"
     }
   },
   details: {
-    title: "제품 상세 정보",
+    title: "상세정보",
     subtitle: "논산계룡축협 '차린' 양념육의 모든 것을 투명하게 공개합니다.",
     products: [
       {

@@ -123,12 +123,12 @@ export default function MainPage() {
                 multiline 
               />
               <ul className="space-y-4">
-                <li className="flex items-center gap-3 font-medium">
-                  <CheckCircle2 className="text-secondary" /> HACCP 인증 시설 제조
-                </li>
-                <li className="flex items-center gap-3 font-medium">
-                  <CheckCircle2 className="text-secondary" /> 축산물 이력제 100% 적용
-                </li>
+                {content.main.features.feature1.list.map((_: any, idx: number) => (
+                  <li key={idx} className="flex items-center gap-3 font-medium">
+                    <CheckCircle2 className="text-secondary" />
+                    <EditableText contentPath={`main.features.feature1.list.${idx}`} />
+                  </li>
+                ))}
               </ul>
             </motion.div>
             <motion.div 
@@ -167,7 +167,11 @@ export default function MainPage() {
                 multiline 
               />
               <div className="bg-white p-6 rounded-2xl border border-gray-100">
-                <p className="italic text-gray-500">"까다로운 엄마들이 먼저 알아본 건강한 레시피"</p>
+                <EditableText 
+                  contentPath="main.features.feature2.quote" 
+                  as="p" 
+                  className="italic text-gray-500" 
+                />
               </div>
             </motion.div>
           </div>
@@ -178,7 +182,11 @@ export default function MainPage() {
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4">이미 많은 부모님들이 경험하셨습니다</h2>
+            <EditableText 
+              contentPath="main.socialProof.title" 
+              as="h2" 
+              className="text-3xl md:text-4xl font-heading font-bold mb-4" 
+            />
             <div className="flex justify-center gap-1 text-yellow-400 mb-2">
               <Star fill="currentColor" />
               <Star fill="currentColor" />
@@ -186,25 +194,34 @@ export default function MainPage() {
               <Star fill="currentColor" />
               <Star fill="currentColor" />
             </div>
-            <p className="text-gray-500">평균 만족도 4.9 / 5.0</p>
+            <EditableText 
+              contentPath="main.socialProof.rating" 
+              as="p" 
+              className="text-gray-500" 
+            />
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { name: "김*희 님", content: "맞벌이라 저녁 준비가 늘 전쟁이었는데, 차린 덕분에 10분 만에 훌륭한 식탁이 완성돼요. 아이가 너무 잘 먹어서 뿌듯합니다.", tag: "워킹맘" },
-              { name: "이*준 님", content: "고기 질이 확실히 달라요. 축협 제품이라 믿고 샀는데 양념도 자극적이지 않고 고기가 정말 부드럽네요. 재구매 의사 200%입니다.", tag: "요리하는 아빠" },
-              { name: "박*연 님", content: "캠핑 갈 때 가져갔는데 인기 폭발이었어요! 포장도 깔끔하고 조리가 간편해서 야외에서도 셰프 소리 들었네요.", tag: "캠핑 매니아" }
-            ].map((review, idx) => (
+            {content.main.socialProof.reviews.map((_: any, idx: number) => (
               <motion.div 
                 key={idx}
                 whileHover={{ y: -10 }}
                 className="p-8 bg-background rounded-2xl border border-gray-100"
               >
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="text-xs font-bold bg-gray-200 px-2 py-1 rounded text-gray-600">{review.tag}</span>
-                  <span className="text-sm font-bold">{review.name}</span>
+                  <span className="text-xs font-bold bg-gray-200 px-2 py-1 rounded text-gray-600">
+                    <EditableText contentPath={`main.socialProof.reviews.${idx}.tag`} />
+                  </span>
+                  <span className="text-sm font-bold">
+                    <EditableText contentPath={`main.socialProof.reviews.${idx}.name`} />
+                  </span>
                 </div>
-                <p className="text-gray-600 leading-relaxed">"{review.content}"</p>
+                <EditableText 
+                  contentPath={`main.socialProof.reviews.${idx}.content`} 
+                  as="p" 
+                  className="text-gray-600 leading-relaxed" 
+                  multiline 
+                />
               </motion.div>
             ))}
           </div>

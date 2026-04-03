@@ -11,6 +11,7 @@ import AdminLogin from './pages/AdminLogin';
 import { AdminProvider } from './context/AdminContext';
 import { ContentProvider } from './context/ContentContext';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import AdminToolbar from './components/common/AdminToolbar';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -41,6 +42,7 @@ export default function App() {
               </div>
               <Footer />
             </div>
+            <AdminToolbar />
           </Router>
         </ContentProvider>
       </AdminProvider>

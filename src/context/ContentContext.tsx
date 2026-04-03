@@ -35,7 +35,10 @@ interface AppContent {
   [key: string]: any;
 }
 
+const CONTENT_VERSION = "1.0.1"; // Increment this to force update for all users
+
 const defaultContent: AppContent = {
+  version: CONTENT_VERSION,
   header: {
     logo: "https://ais-dev-2dwkgarvymhzbeziz4zjfb-211536969439.asia-northeast1.run.app/logo.png", // Use a placeholder or actual logo if available
     cta: "특가 구매하기"
@@ -257,6 +260,13 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
     
     try {
       const parsed = JSON.parse(saved);
+      
+      // If version is different, force reset to defaultContent
+      if (parsed.version !== CONTENT_VERSION) {
+        console.log("New content version detected, resetting to defaults.");
+        return defaultContent;
+      }
+
       // Deep merge helper to ensure new default fields are added to existing state
       const merge = (target: any, source: any) => {
         for (const key in source) {

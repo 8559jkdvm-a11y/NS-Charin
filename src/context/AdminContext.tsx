@@ -34,8 +34,16 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Google login failed:", error);
+      // Provide more context for common errors
+      if (error.code === 'auth/unauthorized-domain') {
+        throw new Error("이 도메인은 Firebase에서 허용되지 않았습니다. Firebase 콘솔에서 도메인을 추가해 주세요.");
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error("로그인 팝업이 닫혔습니다.");
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        throw new Error("이전 로그인 요청이 아직 처리 중입니다.");
+      }
       throw error;
     }
   };

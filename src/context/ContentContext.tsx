@@ -43,7 +43,10 @@ interface ContentContextType {
   content: AppContent;
   updateContent: (path: string, value: any) => void;
   syncToCloud: () => Promise<void>;
+  refreshFromCloud: () => Promise<void>;
   isSyncing: boolean;
+  isCloudLoaded: boolean;
+  lastSynced: string | null;
   storageError: string | null;
   clearStorage: () => void;
 }
@@ -95,20 +98,43 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
 
   const [storageError, setStorageError] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isCloudLoaded, setIsCloudLoaded] = useState(false);
+  const [lastSynced, setLastSynced] = useState<string | null>(() => localStorage.getItem('last_synced'));
 
   // Deep merge helper
   const merge = (target: any, source: any) => {
+    if (!target) return source;
+    const result = { ...target };
     for (const key in source) {
       if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
-        if (!target[key]) target[key] = {};
-        merge(target[key], source[key]);
+        result[key] = merge(target[key] || {}, source[key]);
       } else {
         if (target[key] === undefined) {
-          target[key] = source[key];
+          result[key] = source[key];
         }
       }
     }
-    return target;
+    return result;
+  };
+
+  const refreshFromCloud = async () => {
+    setIsSyncing(true);
+    try {
+      const contentDoc = doc(db, 'app_config', 'current_content');
+      const snapshot = await getDocFromServer(contentDoc);
+      if (snapshot.exists()) {
+        const cloudData = snapshot.data() as AppContent;
+        setContent(prev => merge({ ...cloudData }, defaultContent));
+        setIsCloudLoaded(true);
+        const now = new Date().toLocaleString();
+        setLastSynced(now);
+        localStorage.setItem('last_synced', now);
+      }
+    } catch (e) {
+      console.error("Failed to refresh from cloud", e);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   // Real-time sync from Firestore
@@ -118,13 +144,16 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onSnapshot(contentDoc, (snapshot) => {
       if (snapshot.exists()) {
         const cloudData = snapshot.data() as AppContent;
-        console.log("Cloud content received, merging...");
+        console.log("Cloud content received");
         
         setContent(prev => {
-          // Merge cloud data with defaults to ensure structure
           const merged = merge({ ...cloudData }, defaultContent);
           return merged;
         });
+        setIsCloudLoaded(true);
+        const now = new Date().toLocaleString();
+        setLastSynced(now);
+        localStorage.setItem('last_synced', now);
       }
     }, (error) => {
       console.error("Firestore sync error:", error);
@@ -194,7 +223,15 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
     setIsSyncing(true);
     try {
       const contentDoc = doc(db, 'app_config', 'current_content');
-      await setDoc(contentDoc, content);
+      // Add a timestamp to the content before saving
+      const contentWithTimestamp = {
+        ...content,
+        lastUpdated: new Date().toISOString()
+      };
+      await setDoc(contentDoc, contentWithTimestamp);
+      const now = new Date().toLocaleString();
+      setLastSynced(now);
+      localStorage.setItem('last_synced', now);
       console.log("Content synced to cloud successfully");
     } catch (e) {
       console.error("Failed to sync to cloud", e);
@@ -205,7 +242,17 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ContentContext.Provider value={{ content, updateContent, syncToCloud, isSyncing, storageError, clearStorage }}>
+    <ContentContext.Provider value={{ 
+      content, 
+      updateContent, 
+      syncToCloud, 
+      refreshFromCloud,
+      isSyncing, 
+      isCloudLoaded,
+      lastSynced,
+      storageError, 
+      clearStorage 
+    }}>
       {children}
     </ContentContext.Provider>
   );

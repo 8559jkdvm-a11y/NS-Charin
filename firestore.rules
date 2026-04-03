@@ -7,10 +7,8 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      return isAuthenticated() && (
-        request.auth.token.email == "8559jkdvm@gmail.com" && 
-        request.auth.token.email_verified == true
-      );
+      return isAuthenticated() && 
+        request.auth.token.email == "8559jkdvm@gmail.com";
     }
 
     // App Config rules

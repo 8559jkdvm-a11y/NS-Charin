@@ -5,7 +5,7 @@ import { RotateCcw, Copy, X, ShieldCheck, CloudUpload, LogIn, Loader2 } from 'lu
 
 export default function AdminToolbar() {
   const { isAdmin, logout, user, loginWithGoogle } = useAdmin();
-  const { clearStorage, syncToCloud, isSyncing } = useContent();
+  const { clearStorage, syncToCloud, refreshFromCloud, isSyncing, isCloudLoaded, lastSynced } = useContent();
   const [isPublishing, setIsPublishing] = useState(false);
 
   if (!isAdmin) return null;
@@ -28,10 +28,10 @@ export default function AdminToolbar() {
 
   const handlePublish = async () => {
     if (!user) {
-      alert("클라우드에 저장하려면 먼저 구글 로그인이 필요합니다.");
       try {
         await loginWithGoogle();
-      } catch (e) {
+      } catch (e: any) {
+        alert(e.message || "구글 로그인 중 오류가 발생했습니다.");
         return;
       }
     }
@@ -41,8 +41,8 @@ export default function AdminToolbar() {
       try {
         await syncToCloud();
         alert("클라우드에 성공적으로 게시되었습니다!");
-      } catch (e) {
-        alert("게시 중 오류가 발생했습니다. 권한을 확인해 주세요.");
+      } catch (e: any) {
+        alert(`게시 중 오류가 발생했습니다: ${e.message || "권한을 확인해 주세요."}`);
       } finally {
         setIsPublishing(false);
       }
@@ -54,19 +54,33 @@ export default function AdminToolbar() {
       <div className="bg-primary text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-4 pointer-events-auto border-2 border-white/20 backdrop-blur-md">
         <div className="flex flex-col border-r border-white/20 pr-4">
           <div className="flex items-center gap-2">
-            <ShieldCheck size={18} className="text-green-400" />
+            <ShieldCheck size={18} className={isCloudLoaded ? "text-green-400" : "text-yellow-400"} />
             <span className="text-sm font-bold">관리자 모드</span>
           </div>
-          {user ? (
-            <span className="text-[10px] text-white/60 truncate max-w-[100px]">{user.email}</span>
-          ) : (
-            <button 
-              onClick={loginWithGoogle}
-              className="text-[10px] text-blue-300 hover:text-blue-200 flex items-center gap-1"
-            >
-              <LogIn size={10} /> 구글 로그인
-            </button>
-          )}
+          <div className="flex flex-col">
+            {user ? (
+              <span className="text-[10px] text-white/60 truncate max-w-[100px]">{user.email}</span>
+            ) : (
+              <button 
+                onClick={async () => {
+                  try {
+                    await loginWithGoogle();
+                  } catch (e: any) {
+                    alert(e.message || "구글 로그인 중 오류가 발생했습니다.");
+                  }
+                }}
+                className="text-[10px] text-blue-300 hover:text-blue-200 flex items-center gap-1"
+              >
+                <LogIn size={10} /> 구글 로그인
+              </button>
+            )}
+            <div className="flex items-center gap-1 mt-0.5">
+              <div className={`w-1.5 h-1.5 rounded-full ${isCloudLoaded ? 'bg-green-500' : 'bg-yellow-500 animate-pulse'}`} />
+              <span className="text-[9px] text-white/40">
+                {isCloudLoaded ? `클라우드 연결됨 (${lastSynced || '방금'})` : '로컬 데이터 사용 중'}
+              </span>
+            </div>
+          </div>
         </div>
         
         <div className="flex items-center gap-2">
@@ -78,6 +92,16 @@ export default function AdminToolbar() {
           >
             {isPublishing || isSyncing ? <Loader2 size={14} className="animate-spin" /> : <CloudUpload size={14} />}
             클라우드 게시
+          </button>
+
+          <button 
+            onClick={() => refreshFromCloud()}
+            disabled={isSyncing}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700 hover:bg-gray-800 text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 disabled:opacity-50"
+            title="클라우드에서 최신 데이터를 다시 불러옵니다"
+          >
+            {isSyncing ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
+            클라우드 동기화
           </button>
 
           <button 

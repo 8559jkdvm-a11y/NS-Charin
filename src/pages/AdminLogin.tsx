@@ -18,8 +18,8 @@ export default function AdminLogin() {
     try {
       await loginWithGoogle();
       navigate('/');
-    } catch (e) {
-      setError('구글 로그인에 실패했습니다.');
+    } catch (e: any) {
+      setError(e.message || '구글 로그인에 실패했습니다.');
     }
   };
 

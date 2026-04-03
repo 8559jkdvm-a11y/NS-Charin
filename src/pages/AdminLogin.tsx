@@ -4,15 +4,24 @@ import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '@/src/context/AdminContext';
 import { useContent } from '@/src/context/ContentContext';
 import { motion } from 'motion/react';
-import { Lock, User, Key, Trash2 } from 'lucide-react';
+import { Lock, User, Key, Trash2, LogIn } from 'lucide-react';
 
 export default function AdminLogin() {
   const [id, setId] = useState('');
   const [pw, setPw] = useState('');
   const [error, setError] = useState('');
-  const { login } = useAdmin();
+  const { login, loginWithGoogle } = useAdmin();
   const { clearStorage, storageError } = useContent();
   const navigate = useNavigate();
+
+  const handleGoogleLogin = async () => {
+    try {
+      await loginWithGoogle();
+      navigate('/');
+    } catch (e) {
+      setError('구글 로그인에 실패했습니다.');
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +89,24 @@ export default function AdminLogin() {
             className="w-full bg-primary text-white py-4 rounded-xl font-bold hover:bg-red-700 transition-colors shadow-lg"
           >
             로그인
+          </button>
+
+          <div className="relative my-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-100"></div>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-gray-400">또는</span>
+            </div>
+          </div>
+
+          <button 
+            type="button"
+            onClick={handleGoogleLogin}
+            className="w-full bg-white border-2 border-gray-100 text-gray-700 py-4 rounded-xl font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-3 shadow-sm"
+          >
+            <LogIn size={20} className="text-blue-500" />
+            구글 계정으로 로그인
           </button>
         </form>
         

@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { defaultContent, CONTENT_VERSION } from '@/src/constants/defaultContent';
+import { db } from '@/src/lib/firebase';
+import { doc, onSnapshot, setDoc, getDocFromCache, getDocFromServer } from 'firebase/firestore';
 
 interface AppContent {
   version: string;
@@ -40,6 +42,8 @@ interface AppContent {
 interface ContentContextType {
   content: AppContent;
   updateContent: (path: string, value: any) => void;
+  syncToCloud: () => Promise<void>;
+  isSyncing: boolean;
   storageError: string | null;
   clearStorage: () => void;
 }
@@ -90,6 +94,44 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
   });
 
   const [storageError, setStorageError] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Deep merge helper
+  const merge = (target: any, source: any) => {
+    for (const key in source) {
+      if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+        if (!target[key]) target[key] = {};
+        merge(target[key], source[key]);
+      } else {
+        if (target[key] === undefined) {
+          target[key] = source[key];
+        }
+      }
+    }
+    return target;
+  };
+
+  // Real-time sync from Firestore
+  useEffect(() => {
+    const contentDoc = doc(db, 'app_config', 'current_content');
+    
+    const unsubscribe = onSnapshot(contentDoc, (snapshot) => {
+      if (snapshot.exists()) {
+        const cloudData = snapshot.data() as AppContent;
+        console.log("Cloud content received, merging...");
+        
+        setContent(prev => {
+          // Merge cloud data with defaults to ensure structure
+          const merged = merge({ ...cloudData }, defaultContent);
+          return merged;
+        });
+      }
+    }, (error) => {
+      console.error("Firestore sync error:", error);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     try {
@@ -148,8 +190,22 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const syncToCloud = async () => {
+    setIsSyncing(true);
+    try {
+      const contentDoc = doc(db, 'app_config', 'current_content');
+      await setDoc(contentDoc, content);
+      console.log("Content synced to cloud successfully");
+    } catch (e) {
+      console.error("Failed to sync to cloud", e);
+      throw e;
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
-    <ContentContext.Provider value={{ content, updateContent, storageError, clearStorage }}>
+    <ContentContext.Provider value={{ content, updateContent, syncToCloud, isSyncing, storageError, clearStorage }}>
       {children}
     </ContentContext.Provider>
   );

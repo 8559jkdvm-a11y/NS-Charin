@@ -1,0 +1,25 @@
+{
+  "entities": {
+    "AppContent": {
+      "title": "App Content",
+      "description": "The entire content structure of the application.",
+      "type": "object",
+      "properties": {
+        "version": { "type": "string" },
+        "header": { "type": "object" },
+        "main": { "type": "object" },
+        "details": { "type": "object" },
+        "services": { "type": "object" },
+        "about": { "type": "object" },
+        "support": { "type": "object" },
+        "footer": { "type": "object" }
+      }
+    }
+  },
+  "firestore": {
+    "/app_config/current_content": {
+      "schema": { "$ref": "AppContent" },
+      "description": "The current live content of the application."
+    }
+  }
+}

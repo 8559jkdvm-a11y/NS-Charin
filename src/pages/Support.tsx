@@ -23,14 +23,20 @@ export default function Support() {
 
     // EmailJS Configuration - Get these from your EmailJS dashboard (emailjs.com)
     const meta = import.meta as any;
-    const SERVICE_ID = meta.env.VITE_EMAILJS_SERVICE_ID || "service_id";
-    const TEMPLATE_ID = meta.env.VITE_EMAILJS_TEMPLATE_ID || "template_id";
-    const PUBLIC_KEY = meta.env.VITE_EMAILJS_PUBLIC_KEY || "public_key";
+    const SERVICE_ID = meta.env.VITE_EMAILJS_SERVICE_ID;
+    const TEMPLATE_ID = meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const PUBLIC_KEY = meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
     try {
       // If IDs are not set, fallback to mailto immediately
-      if (SERVICE_ID === "service_id" || !meta.env.VITE_EMAILJS_SERVICE_ID) {
-        throw new Error("EmailJS not configured. Please set VITE_EMAILJS_SERVICE_ID, VITE_EMAILJS_TEMPLATE_ID, and VITE_EMAILJS_PUBLIC_KEY in settings.");
+      if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
+        console.warn("EmailJS not configured. Falling back to mailto.");
+        const subject = encodeURIComponent(`[차린 1:1 문의] ${name}님`);
+        const body = encodeURIComponent(`이름: ${name}\n연락처: ${phone}\n\n문의내용:\n${message}`);
+        const mailtoUrl = `mailto:nh173806-2@nonghyup.com?subject=${subject}&body=${body}`;
+        window.open(mailtoUrl, '_blank');
+        setIsSubmitted(true);
+        return;
       }
 
       await emailjs.send(

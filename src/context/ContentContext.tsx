@@ -264,9 +264,13 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
       // Each top-level key in AppContent becomes a separate document
       for (const key in content) {
         if (key === 'version') continue;
-        const sectionDoc = doc(db, 'app_config', `section_${key}`);
-        // @ts-ignore
-        batch.set(sectionDoc, content[key]);
+        const value = content[key];
+        
+        // Only objects can be saved as Firestore documents
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          const sectionDoc = doc(db, 'app_config', `section_${key}`);
+          batch.set(sectionDoc, value);
+        }
       }
 
       // Also update the legacy document with a "redirect" or small summary if needed

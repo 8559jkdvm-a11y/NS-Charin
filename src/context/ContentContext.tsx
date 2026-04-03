@@ -1,7 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { defaultContent, CONTENT_VERSION } from '@/src/constants/defaultContent';
 import { db } from '@/src/lib/firebase';
-import { doc, onSnapshot, setDoc, getDocFromCache, getDocFromServer } from 'firebase/firestore';
+import { 
+  doc, 
+  onSnapshot, 
+  setDoc, 
+  getDocFromServer, 
+  collection, 
+  writeBatch,
+  query,
+  getDocs
+} from 'firebase/firestore';
 
 interface AppContent {
   version: string;
@@ -139,15 +148,35 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
 
   // Real-time sync from Firestore
   useEffect(() => {
-    const contentDoc = doc(db, 'app_config', 'current_content');
+    const configCol = collection(db, 'app_config');
     
-    const unsubscribe = onSnapshot(contentDoc, (snapshot) => {
-      if (snapshot.exists()) {
-        const cloudData = snapshot.data() as AppContent;
-        console.log("Cloud content received");
-        
+    // Listen to the entire collection to reconstruct the content from sections
+    const unsubscribe = onSnapshot(configCol, (querySnapshot) => {
+      if (querySnapshot.empty) return;
+
+      console.log("Cloud content updates received");
+      const newContent = { ...defaultContent };
+      let hasData = false;
+
+      querySnapshot.forEach((doc) => {
+        const id = doc.id;
+        const data = doc.data();
+
+        if (id === 'current_content') {
+          // Legacy support: if the old single document exists, use it
+          Object.assign(newContent, data);
+          hasData = true;
+        } else if (id.startsWith('section_')) {
+          const sectionKey = id.replace('section_', '');
+          // @ts-ignore
+          newContent[sectionKey] = data;
+          hasData = true;
+        }
+      });
+
+      if (hasData) {
         setContent(prev => {
-          const merged = merge({ ...cloudData }, defaultContent);
+          const merged = merge({ ...newContent }, defaultContent);
           return merged;
         });
         setIsCloudLoaded(true);
@@ -222,17 +251,40 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
   const syncToCloud = async () => {
     setIsSyncing(true);
     try {
-      const contentDoc = doc(db, 'app_config', 'current_content');
-      // Add a timestamp to the content before saving
-      const contentWithTimestamp = {
-        ...content,
+      const batch = writeBatch(db);
+      
+      // Save metadata and version
+      const metaDoc = doc(db, 'app_config', 'metadata');
+      batch.set(metaDoc, { 
+        lastUpdated: new Date().toISOString(),
+        version: content.version 
+      });
+
+      // Split content into sections to avoid 1MB limit
+      // Each top-level key in AppContent becomes a separate document
+      for (const key in content) {
+        if (key === 'version') continue;
+        const sectionDoc = doc(db, 'app_config', `section_${key}`);
+        // @ts-ignore
+        batch.set(sectionDoc, content[key]);
+      }
+
+      // Also update the legacy document with a "redirect" or small summary if needed
+      // but we mainly want to clear it or reduce its size.
+      // For safety, we keep a small version of it.
+      const legacyDoc = doc(db, 'app_config', 'current_content');
+      batch.set(legacyDoc, { 
+        version: content.version,
+        splitStorage: true,
         lastUpdated: new Date().toISOString()
-      };
-      await setDoc(contentDoc, contentWithTimestamp);
+      });
+
+      await batch.commit();
+
       const now = new Date().toLocaleString();
       setLastSynced(now);
       localStorage.setItem('last_synced', now);
-      console.log("Content synced to cloud successfully");
+      console.log("Content synced to cloud successfully (split into sections)");
     } catch (e) {
       console.error("Failed to sync to cloud", e);
       throw e;

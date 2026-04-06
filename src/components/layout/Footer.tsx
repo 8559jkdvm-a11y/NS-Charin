@@ -18,8 +18,8 @@ export default function Footer() {
 
   return (
     <footer className="bg-gray-900 text-gray-300 py-12 px-4">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div className="col-span-1 md:col-span-2">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-8">
+        <div className="sm:col-span-2">
           <EditableText 
             contentPath="footer.brand" 
             as="h2" 
@@ -28,13 +28,13 @@ export default function Footer() {
           <EditableText 
             contentPath="footer.description" 
             as="p" 
-            className="text-sm leading-relaxed mb-6 max-w-md" 
+            className="text-sm leading-relaxed mb-6 max-w-md opacity-80" 
             multiline={true}
           />
-          <div className="flex gap-4">
-            <a href="#" className="hover:text-white transition-colors"><Instagram size={20} /></a>
-            <a href="#" className="hover:text-white transition-colors"><Facebook size={20} /></a>
-            <a href="#" className="hover:text-white transition-colors"><Youtube size={20} /></a>
+          <div className="flex gap-5">
+            <a href="#" className="hover:text-white transition-colors p-2 bg-gray-800 rounded-full"><Instagram size={18} /></a>
+            <a href="#" className="hover:text-white transition-colors p-2 bg-gray-800 rounded-full"><Facebook size={18} /></a>
+            <a href="#" className="hover:text-white transition-colors p-2 bg-gray-800 rounded-full"><Youtube size={18} /></a>
           </div>
         </div>
         
@@ -42,37 +42,39 @@ export default function Footer() {
           <EditableText 
             contentPath="footer.customerCenter.title" 
             as="h3" 
-            className="text-white font-bold mb-4" 
+            className="text-white font-bold mb-5" 
           />
-          <EditableText 
-            contentPath="footer.customerCenter.phone" 
-            as="p" 
-            className="text-sm mb-2" 
-          />
-          <EditableText 
-            contentPath="footer.customerCenter.hours" 
-            as="p" 
-            className="text-sm mb-2" 
-          />
-          <EditableText 
-            contentPath="footer.customerCenter.lunch" 
-            as="p" 
-            className="text-sm" 
-          />
+          <div className="space-y-2 opacity-80">
+            <EditableText 
+              contentPath="footer.customerCenter.phone" 
+              as="p" 
+              className="text-sm" 
+            />
+            <EditableText 
+              contentPath="footer.customerCenter.hours" 
+              as="p" 
+              className="text-sm" 
+            />
+            <EditableText 
+              contentPath="footer.customerCenter.lunch" 
+              as="p" 
+              className="text-sm" 
+            />
+          </div>
         </div>
 
         <div>
-          <h3 className="text-white font-bold mb-4">정보</h3>
-          <ul className="text-sm space-y-2">
-            <li><Link to="/about" className="hover:text-white">브랜드 스토리</Link></li>
-            <li><Link to="/products/details" className="hover:text-white">상세정보</Link></li>
-            <li><Link to="/support" className="hover:text-white">고객지원</Link></li>
+          <h3 className="text-white font-bold mb-5">정보</h3>
+          <ul className="text-sm space-y-3 opacity-80">
+            <li><Link to="/about" className="hover:text-white transition-colors">브랜드 스토리</Link></li>
+            <li><Link to="/products/details" className="hover:text-white transition-colors">상세정보</Link></li>
+            <li><Link to="/support" className="hover:text-white transition-colors">고객지원</Link></li>
           </ul>
         </div>
       </div>
       
-      <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div className="text-xs text-gray-500 text-center md:text-left">
+      <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="text-[11px] md:text-xs text-gray-500 text-center md:text-left leading-relaxed">
           <EditableText 
             contentPath="footer.info.copyright" 
             as="p" 
@@ -85,7 +87,7 @@ export default function Footer() {
           />
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
           {isAdmin && (
             <button 
               onClick={handleReset}
@@ -103,7 +105,7 @@ export default function Footer() {
               <LogOut size={14} /> 로그아웃 (관리자 모드)
             </button>
           ) : (
-            <Link to="/admin" className="text-gray-600 hover:text-white transition-colors">
+            <Link to="/admin" className="text-gray-600 hover:text-white transition-colors p-2">
               <Settings size={18} />
             </Link>
           )}

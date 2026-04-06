@@ -69,34 +69,63 @@ export default function Header() {
         </button>
       </div>
 
-      {/* Mobile Nav */}
+      {/* Mobile Nav Overlay */}
       {isOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="md:hidden bg-white border-t border-gray-100 absolute w-full left-0 shadow-lg"
-        >
-          <div className="px-4 pt-2 pb-6 space-y-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setIsOpen(false)}
-                className="block px-3 py-4 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary"
-              >
-                {item.name}
-              </Link>
-            ))}
-            <Link
-              to="/support"
-              onClick={() => setIsOpen(false)}
-              className="block w-full text-center bg-primary text-white py-3 rounded-lg font-bold mt-4"
-            >
-              <EditableText contentPath="header.cta" as="span" />
-            </Link>
-          </div>
-        </motion.div>
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
+          onClick={() => setIsOpen(false)}
+        />
       )}
+
+      {/* Mobile Nav Menu */}
+      <motion.div
+        initial={{ x: '100%' }}
+        animate={{ x: isOpen ? 0 : '100%' }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+        className="fixed top-0 right-0 h-full w-[80%] max-w-sm bg-white z-50 md:hidden shadow-2xl flex flex-col"
+      >
+        <div className="p-6 flex justify-between items-center border-b border-gray-100">
+          <Link to="/" onClick={() => setIsOpen(false)}>
+            <EditableImage 
+              contentPath="header.logo" 
+              className="h-8 w-auto object-contain" 
+              alt="차린 로고" 
+            />
+          </Link>
+          <button className="text-gray-600 p-2" onClick={() => setIsOpen(false)}>
+            <X size={24} />
+          </button>
+        </div>
+        
+        <div className="flex-grow overflow-y-auto py-8 px-6 space-y-2">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => setIsOpen(false)}
+              className={cn(
+                "block py-4 text-lg font-bold transition-colors",
+                location.pathname === item.path ? "text-primary" : "text-gray-700"
+              )}
+            >
+              {item.name}
+            </Link>
+          ))}
+        </div>
+
+        <div className="p-6 border-t border-gray-100">
+          <Link
+            to="/support"
+            onClick={() => setIsOpen(false)}
+            className="block w-full text-center bg-primary text-white py-4 rounded-2xl font-bold text-lg shadow-lg shadow-primary/20"
+          >
+            <EditableText contentPath="header.cta" as="span" />
+          </Link>
+          <p className="text-center text-xs text-gray-400 mt-6 font-medium">
+            © 2024 논산계룡축협 차린. All rights reserved.
+          </p>
+        </div>
+      </motion.div>
     </header>
   );
 }

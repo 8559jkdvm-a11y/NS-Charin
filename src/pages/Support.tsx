@@ -160,7 +160,20 @@ export default function Support() {
     const subject = encodeURIComponent(`[차린 1:1 문의] ${lastInquiry.name}님`);
     const body = encodeURIComponent(`이름: ${lastInquiry.name}\n연락처: ${lastInquiry.phone}\n\n문의내용:\n${lastInquiry.message}`);
     const mailtoUrl = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
-    window.location.href = mailtoUrl;
+    
+    // Create a temporary link and click it - more reliable in some environments
+    const link = document.createElement('a');
+    link.href = mailtoUrl;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleCopyEmail = () => {
+    navigator.clipboard.writeText('17381-2@nonghyup.com').then(() => {
+      alert('이메일 주소가 복사되었습니다: 17381-2@nonghyup.com');
+    });
   };
 
   const handleCopyContent = () => {
@@ -257,39 +270,66 @@ export default function Support() {
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-8 md:py-12"
+              className="py-4 md:py-8"
             >
-              <div className="w-16 h-16 md:w-20 md:h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Check className="w-8 h-8 md:w-10 md:h-10" />
+              <div className="text-center mb-10">
+                <div className="w-16 h-16 md:w-20 md:h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Check className="w-8 h-8 md:w-10 md:h-10" />
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold mb-2">문의 내용이 저장되었습니다</h3>
+                <p className="text-sm md:text-base text-gray-600">
+                  내용은 데이터베이스에 안전하게 기록되었습니다.<br />
+                  <span className="text-primary font-bold">최종 전송을 위해 아래 단계 중 하나를 진행해 주세요.</span>
+                </p>
               </div>
-              <h3 className="text-xl md:text-2xl font-bold mb-2">문의가 접수되었습니다</h3>
-              <p className="text-sm md:text-base text-gray-600 mb-8">
-                내용이 데이터베이스에 안전하게 저장되었습니다.<br />
-                자동 메일 발송 설정이 되어있지 않은 경우, 아래 버튼을 눌러 직접 메일을 보내주세요.
-              </p>
               
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-                <button 
-                  onClick={handleManualMail}
-                  className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-red-700 transition-all flex items-center justify-center gap-2"
-                >
-                  <MessageSquare size={18} />
-                  메일 앱으로 전송하기
-                </button>
-                <button 
-                  onClick={handleCopyContent}
-                  className="bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 transition-all"
-                >
-                  문의 내용 복사하기
-                </button>
+              <div className="grid grid-cols-1 gap-4 max-w-lg mx-auto mb-10">
+                <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                  <p className="font-bold mb-3 flex items-center gap-2">
+                    <span className="w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center text-xs">1</span>
+                    가장 빠른 방법 (메일 앱 실행)
+                  </p>
+                  <p className="text-sm text-gray-600 mb-4">버튼을 누른 후 실행되는 메일 앱에서 <span className="font-bold text-gray-900">'전송'</span> 버튼을 눌러주세요.</p>
+                  <button 
+                    onClick={handleManualMail}
+                    className="w-full bg-primary text-white py-3 rounded-xl font-bold hover:bg-red-700 transition-all flex items-center justify-center gap-2"
+                  >
+                    <MessageSquare size={18} />
+                    메일 앱으로 전송하기
+                  </button>
+                </div>
+
+                <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                  <p className="font-bold mb-3 flex items-center gap-2">
+                    <span className="w-6 h-6 bg-gray-400 text-white rounded-full flex items-center justify-center text-xs">2</span>
+                    직접 메일 쓰기 (수동)
+                  </p>
+                  <p className="text-sm text-gray-600 mb-4">메일 앱이 자동으로 열리지 않는다면 아래 정보를 복사하여 직접 보내주세요.</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button 
+                      onClick={handleCopyEmail}
+                      className="bg-white border border-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-50 transition-all text-sm"
+                    >
+                      이메일 주소 복사
+                    </button>
+                    <button 
+                      onClick={handleCopyContent}
+                      className="bg-white border border-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-50 transition-all text-sm"
+                    >
+                      문의 내용 복사
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              <button 
-                onClick={() => setIsSubmitted(false)}
-                className="text-gray-400 text-sm hover:underline"
-              >
-                새로운 문의 작성하기
-              </button>
+              <div className="text-center">
+                <button 
+                  onClick={() => setIsSubmitted(false)}
+                  className="text-gray-400 text-sm hover:underline"
+                >
+                  새로운 문의 작성하기
+                </button>
+              </div>
             </motion.div>
           ) : (
             <form 

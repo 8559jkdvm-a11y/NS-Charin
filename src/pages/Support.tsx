@@ -107,10 +107,9 @@ export default function Support() {
       }
 
       // 2. Try sending via EmailJS
-      const meta = import.meta as any;
-      const SERVICE_ID = meta.env.VITE_EMAILJS_SERVICE_ID;
-      const TEMPLATE_ID = meta.env.VITE_EMAILJS_TEMPLATE_ID;
-      const PUBLIC_KEY = meta.env.VITE_EMAILJS_PUBLIC_KEY;
+      const SERVICE_ID = import.meta.env?.VITE_EMAILJS_SERVICE_ID;
+      const TEMPLATE_ID = import.meta.env?.VITE_EMAILJS_TEMPLATE_ID;
+      const PUBLIC_KEY = import.meta.env?.VITE_EMAILJS_PUBLIC_KEY;
 
       if (SERVICE_ID && TEMPLATE_ID && PUBLIC_KEY) {
         try {

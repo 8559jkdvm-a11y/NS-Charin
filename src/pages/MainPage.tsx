@@ -135,7 +135,7 @@ export default function MainPage() {
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="rounded-3xl overflow-hidden shadow-2xl aspect-video lg:h-[400px]"
+              className="rounded-3xl overflow-hidden shadow-2xl aspect-video w-full"
             >
               <EditableImage contentPath="main.features.feature1.image" className="w-full h-full object-cover" />
             </motion.div>
@@ -146,7 +146,7 @@ export default function MainPage() {
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="order-2 lg:order-1 rounded-3xl overflow-hidden shadow-2xl aspect-video lg:h-[400px]"
+              className="order-2 lg:order-1 rounded-3xl overflow-hidden shadow-2xl aspect-video w-full"
             >
               <EditableImage contentPath="main.features.feature2.image" className="w-full h-full object-cover" />
             </motion.div>

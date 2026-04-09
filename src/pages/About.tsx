@@ -20,7 +20,7 @@ export default function About() {
 
         {/* CEO Message */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center mb-20 md:mb-32">
-          <div className="rounded-3xl overflow-hidden shadow-xl aspect-[4/5] md:h-[500px]">
+          <div className="rounded-3xl overflow-hidden shadow-xl aspect-[4/5] w-full max-w-md mx-auto lg:mx-0">
             <EditableImage contentPath="about.ceo.image" className="w-full h-full object-cover" alt="CEO" />
           </div>
           <div className="text-center lg:text-left">

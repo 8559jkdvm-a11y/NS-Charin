@@ -24,7 +24,7 @@ export default function ProductDetails() {
               <div className="space-y-6">
                 <EditableImage 
                   contentPath={`details.products.${idx}.images.main`} 
-                  className="rounded-3xl w-full shadow-lg aspect-square md:h-[500px] object-cover" 
+                  className="rounded-3xl w-full shadow-lg aspect-square object-cover" 
                   alt="Product Package" 
                 />
               </div>

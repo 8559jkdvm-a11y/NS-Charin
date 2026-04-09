@@ -5,7 +5,59 @@ import { EditableText } from '@/src/components/ui/Editable';
 import { useContent } from '@/src/context/ContentContext';
 import emailjs from '@emailjs/browser';
 import { db } from '@/src/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocFromServer, doc } from 'firebase/firestore';
+import { auth } from '@/src/lib/firebase';
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId: string | undefined;
+    email: string | null | undefined;
+    emailVerified: boolean | undefined;
+    isAnonymous: boolean | undefined;
+    tenantId: string | null | undefined;
+    providerInfo: {
+      providerId: string;
+      displayName: string | null;
+      email: string | null;
+      photoUrl: string | null;
+    }[];
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo: auth.currentUser?.providerData.map(provider => ({
+        providerId: provider.providerId,
+        displayName: provider.displayName,
+        email: provider.email,
+        photoUrl: provider.photoURL
+      })) || []
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  return new Error(JSON.stringify(errInfo));
+}
 
 export default function Support() {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
@@ -26,6 +78,15 @@ export default function Support() {
     setIsSubmitting(true);
     setSubmissionError(null);
 
+    // Test connection first
+    try {
+      await getDocFromServer(doc(db, 'test', 'connection'));
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('the client is offline')) {
+        console.error("Please check your Firebase configuration. The client is offline.");
+      }
+    }
+
     const formData = new FormData(e.currentTarget);
     const name = formData.get('name') as string;
     const phone = formData.get('phone') as string;
@@ -36,13 +97,17 @@ export default function Support() {
 
     try {
       // 1. Save to Firestore (Always do this as the primary record)
-      await addDoc(collection(db, 'inquiries'), {
-        name,
-        phone,
-        content: message,
-        createdAt: serverTimestamp()
-      });
-      console.log('Inquiry saved to Firestore');
+      try {
+        await addDoc(collection(db, 'inquiries'), {
+          name,
+          phone,
+          content: message,
+          createdAt: serverTimestamp()
+        });
+        console.log('Inquiry saved to Firestore');
+      } catch (fsError) {
+        throw handleFirestoreError(fsError, OperationType.CREATE, 'inquiries');
+      }
 
       // 2. Try sending via EmailJS
       const meta = import.meta as any;
@@ -86,7 +151,8 @@ export default function Support() {
       setIsSubmitted(true);
     } catch (error) {
       console.error('Submission failed:', error);
-      setSubmissionError('문의 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setSubmissionError(`문의 저장 중 오류가 발생했습니다: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }

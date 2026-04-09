@@ -78,15 +78,6 @@ export default function Support() {
     setIsSubmitting(true);
     setSubmissionError(null);
 
-    // Test connection first
-    try {
-      await getDocFromServer(doc(db, 'test', 'connection'));
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('the client is offline')) {
-        console.error("Please check your Firebase configuration. The client is offline.");
-      }
-    }
-
     const formData = new FormData(e.currentTarget);
     const name = formData.get('name') as string;
     const phone = formData.get('phone') as string;
@@ -95,18 +86,24 @@ export default function Support() {
 
     setLastInquiry({ name, phone, message });
 
+    const timeout = (ms: number) => new Promise((_, reject) => setTimeout(() => reject(new Error('전송 시간 초과')), ms));
+
     try {
-      // 1. Save to Firestore (Always do this as the primary record)
+      // 1. Save to Firestore (Primary record)
       try {
-        await addDoc(collection(db, 'inquiries'), {
-          name,
-          phone,
-          content: message,
-          createdAt: serverTimestamp()
-        });
+        await Promise.race([
+          addDoc(collection(db, 'inquiries'), {
+            name,
+            phone,
+            content: message,
+            createdAt: serverTimestamp()
+          }),
+          timeout(5000) // 5 second timeout for DB save
+        ]);
         console.log('Inquiry saved to Firestore');
       } catch (fsError) {
-        throw handleFirestoreError(fsError, OperationType.CREATE, 'inquiries');
+        console.error('Firestore save failed or timed out:', fsError);
+        // We continue to email even if Firestore fails/times out
       }
 
       // 2. Try sending via EmailJS

@@ -11,12 +11,20 @@ export default function Support() {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const { content } = useContent();
   const formRef = useRef<HTMLFormElement>(null);
+
+  const [lastInquiry, setLastInquiry] = useState<{
+    name: string;
+    phone: string;
+    message: string;
+  } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmissionError(null);
 
     const formData = new FormData(e.currentTarget);
     const name = formData.get('name') as string;
@@ -24,14 +32,17 @@ export default function Support() {
     const message = formData.get('content') as string;
     const targetEmail = '17381-2@nonghyup.com';
 
+    setLastInquiry({ name, phone, message });
+
     try {
-      // 1. Save to Firestore first (as a backup)
+      // 1. Save to Firestore (Always do this as the primary record)
       await addDoc(collection(db, 'inquiries'), {
         name,
         phone,
         content: message,
         createdAt: serverTimestamp()
       });
+      console.log('Inquiry saved to Firestore');
 
       // 2. Try sending via EmailJS
       const meta = import.meta as any;
@@ -40,41 +51,62 @@ export default function Support() {
       const PUBLIC_KEY = meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
       if (SERVICE_ID && TEMPLATE_ID && PUBLIC_KEY) {
-        await emailjs.send(
-          SERVICE_ID,
-          TEMPLATE_ID,
-          {
-            from_name: name,
-            from_phone: phone,
-            message: message,
-            to_email: targetEmail
-          },
-          PUBLIC_KEY
-        );
-        console.log('Email sent successfully via EmailJS');
+        try {
+          await emailjs.send(
+            SERVICE_ID,
+            TEMPLATE_ID,
+            {
+              from_name: name,
+              from_phone: phone,
+              message: message,
+              to_email: targetEmail
+            },
+            PUBLIC_KEY
+          );
+          console.log('Email sent successfully via EmailJS');
+        } catch (emailError) {
+          console.error('EmailJS failed, will rely on manual mailto:', emailError);
+          // We don't throw here because Firestore already succeeded
+        }
       } else {
-        // Fallback to mailto if EmailJS is not configured
-        console.warn("EmailJS not configured. Using mailto fallback.");
+        console.warn("EmailJS not configured. Manual mailto will be required.");
+        // Automatically try to open mailto as a convenience
         const subject = encodeURIComponent(`[차린 1:1 문의] ${name}님`);
         const body = encodeURIComponent(`이름: ${name}\n연락처: ${phone}\n\n문의내용:\n${message}`);
         const mailtoUrl = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
-        window.location.href = mailtoUrl;
+        
+        // Try multiple ways to trigger mailto in iframes
+        try {
+          window.location.href = mailtoUrl;
+        } catch (e) {
+          window.open(mailtoUrl, '_blank');
+        }
       }
       
       setIsSubmitted(true);
     } catch (error) {
       console.error('Submission failed:', error);
-      
-      // Final fallback to mailto if everything else fails
-      const subject = encodeURIComponent(`[차린 1:1 문의] ${name}님`);
-      const body = encodeURIComponent(`이름: ${name}\n연락처: ${phone}\n\n문의내용:\n${message}`);
-      const mailtoUrl = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
-      
-      window.location.href = mailtoUrl;
-      setIsSubmitted(true);
+      setSubmissionError('문의 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleManualMail = () => {
+    if (!lastInquiry) return;
+    const targetEmail = '17381-2@nonghyup.com';
+    const subject = encodeURIComponent(`[차린 1:1 문의] ${lastInquiry.name}님`);
+    const body = encodeURIComponent(`이름: ${lastInquiry.name}\n연락처: ${lastInquiry.phone}\n\n문의내용:\n${lastInquiry.message}`);
+    const mailtoUrl = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
+    window.location.href = mailtoUrl;
+  };
+
+  const handleCopyContent = () => {
+    if (!lastInquiry) return;
+    const text = `이름: ${lastInquiry.name}\n연락처: ${lastInquiry.phone}\n문의내용: ${lastInquiry.message}`;
+    navigator.clipboard.writeText(text).then(() => {
+      alert('문의 내용이 복사되었습니다. 메일 앱에 붙여넣어 전송해 주세요.');
+    });
   };
 
   return (
@@ -169,12 +201,32 @@ export default function Support() {
                 <Check className="w-8 h-8 md:w-10 md:h-10" />
               </div>
               <h3 className="text-xl md:text-2xl font-bold mb-2">문의가 접수되었습니다</h3>
-              <p className="text-sm md:text-base text-gray-600 mb-8">담당자가 확인 후 연락드리겠습니다.</p>
+              <p className="text-sm md:text-base text-gray-600 mb-8">
+                내용이 데이터베이스에 안전하게 저장되었습니다.<br />
+                자동 메일 발송 설정이 되어있지 않은 경우, 아래 버튼을 눌러 직접 메일을 보내주세요.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+                <button 
+                  onClick={handleManualMail}
+                  className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-red-700 transition-all flex items-center justify-center gap-2"
+                >
+                  <MessageSquare size={18} />
+                  메일 앱으로 전송하기
+                </button>
+                <button 
+                  onClick={handleCopyContent}
+                  className="bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 transition-all"
+                >
+                  문의 내용 복사하기
+                </button>
+              </div>
+
               <button 
                 onClick={() => setIsSubmitted(false)}
-                className="text-primary font-bold hover:underline"
+                className="text-gray-400 text-sm hover:underline"
               >
-                추가 문의하기
+                새로운 문의 작성하기
               </button>
             </motion.div>
           ) : (
@@ -183,6 +235,11 @@ export default function Support() {
               className="space-y-5 md:space-y-6"
               onSubmit={handleSubmit}
             >
+              {submissionError && (
+                <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm font-medium border border-red-100">
+                  {submissionError}
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
                 <div>
                   <label className="block text-xs md:text-sm font-bold mb-2">이름</label>

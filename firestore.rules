@@ -19,6 +19,18 @@ service cloud.firestore {
       // Only admin can update the config
       allow write: if isAdmin();
     }
+
+    // Inquiries rules
+    match /inquiries/{inquiryId} {
+      // Anyone can submit an inquiry
+      allow create: if true;
+      
+      // Only admin can read/delete inquiries
+      allow read, delete: if isAdmin();
+      
+      // No one can update an inquiry once submitted
+      allow update: if false;
+    }
     
     // Default deny
     match /{document=**} {

@@ -14,12 +14,28 @@
         "support": { "type": "object" },
         "footer": { "type": "object" }
       }
+    },
+    "Inquiry": {
+      "title": "Inquiry",
+      "description": "A 1:1 inquiry from a user.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "phone", "content", "createdAt"]
     }
   },
   "firestore": {
     "/app_config/current_content": {
       "schema": { "$ref": "AppContent" },
       "description": "The current live content of the application."
+    },
+    "/inquiries/{inquiryId}": {
+      "schema": { "$ref": "Inquiry" },
+      "description": "User inquiries submitted via the support form."
     }
   }
 }

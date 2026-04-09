@@ -4,6 +4,8 @@ import { useState, useRef } from 'react';
 import { EditableText } from '@/src/components/ui/Editable';
 import { useContent } from '@/src/context/ContentContext';
 import emailjs from '@emailjs/browser';
+import { db } from '@/src/lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function Support() {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
@@ -20,48 +22,55 @@ export default function Support() {
     const name = formData.get('name') as string;
     const phone = formData.get('phone') as string;
     const message = formData.get('content') as string;
-
-    // EmailJS Configuration - Get these from your EmailJS dashboard (emailjs.com)
-    const meta = import.meta as any;
-    const SERVICE_ID = meta.env.VITE_EMAILJS_SERVICE_ID;
-    const TEMPLATE_ID = meta.env.VITE_EMAILJS_TEMPLATE_ID;
-    const PUBLIC_KEY = meta.env.VITE_EMAILJS_PUBLIC_KEY;
+    const targetEmail = '17381-2@nonghyup.com';
 
     try {
-      // If IDs are not set, fallback to mailto immediately
-      if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
-        console.warn("EmailJS not configured. Falling back to mailto.");
+      // 1. Save to Firestore first (as a backup)
+      await addDoc(collection(db, 'inquiries'), {
+        name,
+        phone,
+        content: message,
+        createdAt: serverTimestamp()
+      });
+
+      // 2. Try sending via EmailJS
+      const meta = import.meta as any;
+      const SERVICE_ID = meta.env.VITE_EMAILJS_SERVICE_ID;
+      const TEMPLATE_ID = meta.env.VITE_EMAILJS_TEMPLATE_ID;
+      const PUBLIC_KEY = meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+      if (SERVICE_ID && TEMPLATE_ID && PUBLIC_KEY) {
+        await emailjs.send(
+          SERVICE_ID,
+          TEMPLATE_ID,
+          {
+            from_name: name,
+            from_phone: phone,
+            message: message,
+            to_email: targetEmail
+          },
+          PUBLIC_KEY
+        );
+        console.log('Email sent successfully via EmailJS');
+      } else {
+        // Fallback to mailto if EmailJS is not configured
+        console.warn("EmailJS not configured. Using mailto fallback.");
         const subject = encodeURIComponent(`[차린 1:1 문의] ${name}님`);
         const body = encodeURIComponent(`이름: ${name}\n연락처: ${phone}\n\n문의내용:\n${message}`);
-        const mailtoUrl = `mailto:nh173806-2@nonghyup.com?subject=${subject}&body=${body}`;
-        window.open(mailtoUrl, '_blank');
-        setIsSubmitted(true);
-        return;
+        const mailtoUrl = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
+        window.location.href = mailtoUrl;
       }
-
-      await emailjs.send(
-        SERVICE_ID,
-        TEMPLATE_ID,
-        {
-          from_name: name,
-          from_phone: phone,
-          message: message,
-          to_email: 'nh173806-2@nonghyup.com'
-        },
-        PUBLIC_KEY
-      );
       
       setIsSubmitted(true);
     } catch (error) {
-      console.error('Email sending failed:', error);
+      console.error('Submission failed:', error);
       
-      // Fallback to mailto if EmailJS is not configured or fails
+      // Final fallback to mailto if everything else fails
       const subject = encodeURIComponent(`[차린 1:1 문의] ${name}님`);
       const body = encodeURIComponent(`이름: ${name}\n연락처: ${phone}\n\n문의내용:\n${message}`);
-      const mailtoUrl = `mailto:nh173806-2@nonghyup.com?subject=${subject}&body=${body}`;
+      const mailtoUrl = `mailto:${targetEmail}?subject=${subject}&body=${body}`;
       
-      // Use window.open for better iframe compatibility
-      window.open(mailtoUrl, '_blank');
+      window.location.href = mailtoUrl;
       setIsSubmitted(true);
     } finally {
       setIsSubmitting(false);
